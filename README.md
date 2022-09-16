@@ -14,18 +14,13 @@ python3 -m venv ./venv
 
 Install packages
 ```
-```
 source venv/bin/activate
 pip install -r /path/to/requirements.txt
 ```
 
+Só ser feliz agora
 
-Run script with enviroment
-```
-```
-
-
-Caso dÊ erro de um tal de libGL.so.1 no Open CV:
+Caso dê erro de um tal de libGL.so.1 no Open CV:
 ```
 apt-get update && apt-get install libgl1
 ```
