@@ -1,15 +1,21 @@
 import cv2
 import numpy as np
-import mss
+from mss import mss
+from PIL import Image
 
-bounding_box = {'top': 100, 'left': 0, 'width': 400, 'height': 300}
+mon = {'left': 160, 'top': 160, 'width': 200, 'height': 200}
 
-sct = mss()
-
-while True:
-    sct_img = sct.grab(bounding_box)
-    cv2.imshow('screen', np.array(sct_img))
-
-    if (cv2.waitKey(1) & 0xFF) == ord('q'):
-        cv2.destroyAllWindows()
-        break
+with mss() as sct:
+    while True:
+        screenShot = sct.grab(mon)
+        img = Image.frombytes(
+            'RGB', 
+            (screenShot.width, screenShot.height), 
+            screenShot.rgb, 
+        )
+        cv2.imshow('test', np.array(img))
+        if cv2.waitKey(33) & 0xFF in (
+            ord('q'), 
+            27, 
+        ):
+            break
