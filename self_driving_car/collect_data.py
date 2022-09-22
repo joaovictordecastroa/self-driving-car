@@ -1,21 +1,30 @@
 import cv2
 import numpy as np
 from mss import mss
-from PIL import Image
+from time import time
 
-mon = {'left': 160, 'top': 160, 'width': 200, 'height': 200}
+monitor = {'left': 0, 'top': 40, 'width': 800, 'height': 600}
 
 with mss() as sct:
     while True:
-        screenShot = sct.grab(mon)
-        img = Image.frombytes(
-            'RGB', 
-            (screenShot.width, screenShot.height), 
-            screenShot.rgb, 
-        )
-        cv2.imshow('test', np.array(img))
-        if cv2.waitKey(33) & 0xFF in (
-            ord('q'), 
-            27, 
-        ):
+        t0 = time()
+        
+        image = np.array(sct.grab(monitor))
+        
+        image = cv2.cvtColor(image, cv2.COLOR_BGRA2GRAY)
+        image = cv2.resize(image, (200, 150))
+
+        image = roi(image, vertices)
+
+        image = cv2.GaussianBlur(image, (5, 5), 0)
+        image = cv2.Canny(image, 100, 200)
+        
+        t1 = time()
+        
+        print(f'time: {t1 - t0}')
+
+        cv2.imshow('OpenCV output', image)
+
+        if cv2.waitKey(1) == ord('q'):
+            cv2.destroyAllWindows()
             break
