@@ -4,7 +4,7 @@
 
 Create virtual enviroment
 ```
-python3 -m venv ./venv
+python -m venv ./venv
 ```
 
 Install packages
