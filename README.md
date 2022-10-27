@@ -1,11 +1,6 @@
 # self-driving-car
 
-## Instalation
-
-Install the poetry python package
-```
-pip install poetry
-```
+## Install requirements
 
 Create virtual enviroment
 ```
@@ -15,12 +10,22 @@ python3 -m venv ./venv
 Install packages
 ```
 source venv/bin/activate
-pip install -r /path/to/requirements.txt
+pip install -r requirements.txt
 ```
 
-Só ser feliz agora
+## Config virtual joystick
 
-Caso dê erro de um tal de libGL.so.1 no Open CV:
+1. Install latest version of [vJoy](https://github.com/shauleiz/vJoy) to create virtual joysticks;
+2. Execute latest version of [x360ce](https://www.x360ce.com/) to mapping virtual joystick as Xbox360 joystick;
+3. In x360ce, click in `Add...` to add a new controller;
+4. Select just the option that `Product Name` is `vJoy Device` and click in `Add Selected Device`;
+5. Copy the content in `configs/joystick_preset.xml`;
+6. Click in `Paste Preset` at the bottom of the screen;
+
+
+## Troubleshoot
+
+If some error occurs in libGL.so.1 in OpenCV:
 ```
 apt-get update && apt-get install libgl1
 ```
