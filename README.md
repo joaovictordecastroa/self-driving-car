@@ -23,6 +23,15 @@ pip install -r requirements.txt
 6. Click in `Paste Preset` at the bottom of the screen;
 
 
+## Install CUDA (optional)
+
+1. Install CUDA Toolkit 11.8 from [CUDA Toolkit Archive](https://developer.nvidia.com/cuda-toolkit-archive);
+2. Install torch again using the command below:
+
+```
+pip install 1.13.0+cu117 torchvision==0.14.0+cu117 torchaudio==0.13.0+cu117 --extra-index-url https://download.pytorch.org/whl/cu117
+```
+
 ## Troubleshoot
 
 If some error occurs in libGL.so.1 in OpenCV:
