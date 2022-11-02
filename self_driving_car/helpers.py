@@ -1,6 +1,14 @@
 import cv2
 import numpy as np
 
+
+def roi(image, vertices):
+  mask = np.zeros_like(image)
+  cv2.fillPoly(mask, [vertices], 255)
+  masked = cv2.bitwise_and(image, mask)
+  return masked
+
+
 def plot_one_box(x, img, color=None, label=None, line_thickness=3):
   '''
   Plots one bounding box on image img
