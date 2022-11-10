@@ -1,6 +1,7 @@
 import torch
 import cv2
 from helpers import plot_one_box
+from math import sqrt
 
 obstacles_labels = ['person', 'bicycle', 'car', 'motorcycle', 'bus', 'truck']
 
@@ -15,7 +16,8 @@ with torch.no_grad():
 results.print()
 
 for *box, conf, cls in results.pred[0]:
-  label = f'{results.names[int(cls)]} {conf:.2f}'
+  diagonal_length = sqrt((box[2] - box[0])**2 + (box[3] - box[1])**2)
+  label = f'{results.names[int(cls)]} {conf:.2f} | {diagonal_length:.2f}'
   if results.names[int(cls)] in obstacles_labels:
     plot_one_box(box, image, label=label, line_thickness=1)
 
