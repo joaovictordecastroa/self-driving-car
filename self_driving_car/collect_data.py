@@ -5,6 +5,7 @@ from time import time
 import torch
 
 from helpers import plot_one_box, roi
+from joystick import PyvJoyXboxController
 
 
 # Macros
@@ -26,14 +27,41 @@ def line_detection(image, vertices):
     return image
 
 
+obstacles_labels = ['person', 'bicycle', 'car', 'motorcycle', 'bus', 'truck']
+
+joy = PyvJoyXboxController([])
+joy.set_axis('LT', -1)
+joy.set_axis('RT', -1)
+
 def object_detection(model, image):
     with torch.no_grad():
         results = model(image)
     
+    max_size = 0
+
     for *box, conf, cls in results.pred[0]:
-        label = f'{results.names[int(cls)]} {conf:.2f}'
-        plot_one_box(box, image, label=label, line_thickness=1)
+        if results.names[int(cls)] in obstacles_labels:
+            size = np.sqrt(np.square(float(box[2]) - float(box[0])) + np.square(float(box[3]) - float(box[1])))
+
+            if size > max_size:
+                max_size = size
+
+            label = f'{results.names[int(cls)]} {conf:.2f} | {size:.2f}'
+
+            plot_one_box(box, image, label=label, line_thickness=1)
     
+    print(f'max size: {max_size}')
+    
+    if max_size >= 70:
+        joy.set_axis('LT', 1)
+        joy.set_axis('RT', -1)
+    elif max_size >= 40:
+        joy.set_axis('LT', 0)
+        joy.set_axis('RT', -1)
+    else:
+        joy.set_axis('LT', -1)
+        joy.set_axis('RT', 0)
+
     return image
     
 
