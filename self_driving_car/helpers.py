@@ -4,7 +4,8 @@ import numpy as np
 
 def roi(image, vertices):
   mask = np.zeros_like(image)
-  cv2.fillPoly(mask, [vertices], 255)
+  color = (255, 255, 255) if image.ndim == 3 else 255
+  cv2.fillPoly(mask, [vertices], color)
   masked = cv2.bitwise_and(image, mask)
   return masked
 
