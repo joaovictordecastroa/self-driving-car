@@ -34,6 +34,8 @@ joy.set_axis('LT', -1)
 joy.set_axis('RT', -1)
 
 def object_detection(model, image):
+    image = roi(image, vertices_obj_det)
+    
     with torch.no_grad():
         results = model(image)
     
@@ -52,13 +54,32 @@ def object_detection(model, image):
     
     print(f'max size: {max_size}')
     
-    if max_size >= 70:
+    if max_size >= 60:
+        joy.set_button('RB', 1)
         joy.set_axis('LT', 1)
         joy.set_axis('RT', -1)
+    elif max_size >= 50:
+        joy.set_button('RB', 0)
+        joy.set_axis('LT', -0.25)
+        joy.set_axis('RT', -0.2)
     elif max_size >= 40:
-        joy.set_axis('LT', 0)
-        joy.set_axis('RT', -1)
+        joy.set_button('RB', 0)
+        joy.set_axis('LT', -0.3)
+        joy.set_axis('RT', -0.2)
+    elif max_size >= 30:
+        joy.set_button('RB', 0)
+        joy.set_axis('LT', -0.6)
+        joy.set_axis('RT', -0.2)
+    elif max_size >= 20:
+        joy.set_button('RB', 0)
+        joy.set_axis('LT', -0.8)
+        joy.set_axis('RT', -0.2)
+    elif max_size >= 10:
+        joy.set_button('RB', 0)
+        joy.set_axis('LT', -1)
+        joy.set_axis('RT', -0.2)
     else:
+        joy.set_button('RB', 0)
         joy.set_axis('LT', -1)
         joy.set_axis('RT', 0)
 
@@ -68,10 +89,13 @@ def object_detection(model, image):
 if __name__ == '__main__':
     monitor = {'left': 0, 'top': 40, 'width': 800, 'height': 600}
 
-    scale = 1 / 4
+    scale = 1 / 2
 
     vertices = np.array([[0, 600], [0, 400], [200, 200], [600, 200], [800, 400], [800, 600]], np.int32)
     vertices = (vertices * scale).astype(np.int32)
+    
+    vertices_obj_det = np.array([[300, 600], [300, 0], [500, 0], [500, 600]], np.int32)
+    vertices_obj_det = (vertices_obj_det * scale).astype(np.int32)
 
     if object_detection_enabled:
         model = torch.hub.load('WongKinYiu/yolov7', 'yolov7')
