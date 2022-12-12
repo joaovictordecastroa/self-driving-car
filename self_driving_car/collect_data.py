@@ -7,24 +7,16 @@ import torch
 from helpers import plot_one_box, roi
 from joystick import PyvJoyXboxController
 
+from lane_detection import LaneDetection
+
 
 # Macros
 line_detection_enabled = False
 object_detection_enabled = True
+lane_detection = LaneDetection()
 
 
 assert line_detection_enabled != object_detection_enabled
-
-
-def line_detection(image, vertices):
-    image = cv2.cvtColor(image, cv2.COLOR_BGRA2GRAY)
-
-    image = cv2.GaussianBlur(image, (5, 5), 0)
-    image = cv2.Canny(image, 100, 200)
-
-    image = roi(image, vertices)
-
-    return image
 
 
 obstacles_labels = ['person', 'bicycle', 'car', 'motorcycle', 'bus', 'truck']
@@ -32,18 +24,22 @@ obstacles_labels = ['person', 'bicycle', 'car', 'motorcycle', 'bus', 'truck']
 joy = PyvJoyXboxController([])
 joy.set_axis('LT', -1)
 joy.set_axis('RT', -1)
+joy.set_axis('LS_X', -1)
+joy.set_axis('RS_X', -1)
+
 
 def object_detection(model, image):
     image = roi(image, vertices_obj_det)
-    
+
     with torch.no_grad():
         results = model(image)
-    
+
     max_size = 0
 
     for *box, conf, cls in results.pred[0]:
         if results.names[int(cls)] in obstacles_labels:
-            size = np.sqrt(np.square(float(box[2]) - float(box[0])) + np.square(float(box[3]) - float(box[1])))
+            size = np.sqrt(np.square(
+                float(box[2]) - float(box[0])) + np.square(float(box[3]) - float(box[1])))
 
             if size > max_size:
                 max_size = size
@@ -51,9 +47,9 @@ def object_detection(model, image):
             label = f'{results.names[int(cls)]} {conf:.2f} | {size:.2f}'
 
             plot_one_box(box, image, label=label, line_thickness=1)
-    
+
     print(f'max size: {max_size}')
-    
+
     if max_size >= 60:
         joy.set_button('RB', 1)
         joy.set_axis('LT', 1)
@@ -84,17 +80,27 @@ def object_detection(model, image):
         joy.set_axis('RT', 0)
 
     return image
-    
+
+
+def lane_direction(lines, thetas):
+    if lines is not None:
+        if lines[0] is None:
+            print('Deve ir para a esquerda')
+            joy.set_axis('LS_X', -0.3)
+        else:
+            print('Deve ir para a direita')
+            joy.set_axis('LS_X', 0.3)
+    else:
+        joy.set_axis('LS_X', 0)
+
 
 if __name__ == '__main__':
     monitor = {'left': 0, 'top': 40, 'width': 800, 'height': 600}
 
-    scale = 1 / 2
+    scale = 1/2
 
-    vertices = np.array([[0, 600], [0, 400], [200, 200], [600, 200], [800, 400], [800, 600]], np.int32)
-    vertices = (vertices * scale).astype(np.int32)
-    
-    vertices_obj_det = np.array([[300, 600], [300, 0], [500, 0], [500, 600]], np.int32)
+    vertices_obj_det = np.array(
+        [[300, 600], [300, 0], [500, 0], [500, 600]], np.int32)
     vertices_obj_det = (vertices_obj_det * scale).astype(np.int32)
 
     if object_detection_enabled:
@@ -103,18 +109,20 @@ if __name__ == '__main__':
     with mss() as sct:
         while True:
             t0 = time()
-            
+
             image = np.array(sct.grab(monitor))
-            image = cv2.resize(image, (0, 0), fx=scale, fy=scale)
 
             if object_detection_enabled:
+                image = cv2.resize(image, (0, 0), fx=scale, fy=scale)
                 image = object_detection(model, image)
-            elif line_detection_enabled:
-                image = line_detection(image, vertices)
+            
+            if line_detection_enabled:
+                image, lines, thetas = lane_detection.get_lanes(image)
+                lane_direction(lines, thetas)
 
             t1 = time()
-            
-            print(f'time: {t1 - t0}')
+
+            # print(f'time: {t1 - t0}')
 
             cv2.imshow('OpenCV output', image)
 
