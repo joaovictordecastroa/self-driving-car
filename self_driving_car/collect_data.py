@@ -24,8 +24,7 @@ obstacles_labels = ['person', 'bicycle', 'car', 'motorcycle', 'bus', 'truck']
 joy = PyvJoyXboxController([])
 joy.set_axis('LT', -1)
 joy.set_axis('RT', -1)
-joy.set_axis('LS_X', -1)
-joy.set_axis('RS_X', -1)
+joy.set_axis('LS_X', 0)
 
 
 def object_detection(model, image):
@@ -86,11 +85,12 @@ def lane_direction(lines, thetas):
     if lines is not None:
         if lines[0] is None:
             print('Deve ir para a esquerda')
-            joy.set_axis('LS_X', -0.3)
+            joy.set_axis('LS_X', -0.5)
         else:
             print('Deve ir para a direita')
-            joy.set_axis('LS_X', 0.3)
+            joy.set_axis('LS_X', 0.5)
     else:
+        print('Vai reto')
         joy.set_axis('LS_X', 0)
 
 
