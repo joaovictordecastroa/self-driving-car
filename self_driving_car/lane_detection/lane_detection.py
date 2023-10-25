@@ -80,8 +80,7 @@ class LaneDetection():
         pts = vertices.reshape((-1, 1, 2))
         cv2.polylines(img, [pts], True, (255, 0, 0), 1)
 
-    def get_lanes(self, image, min_threshold, max_threshold, kernel_size):
-        scale = 1
+    def get_lanes(self, image, min_threshold, max_threshold, max_line_gap, threshold, rho):
 
         img = cv2.GaussianBlur(image, (7, 7), 0)
         img = cv2.Canny(img, min_threshold, max_threshold)
@@ -94,7 +93,8 @@ class LaneDetection():
 
         thetas = []
 
-        lines = cv2.HoughLinesP(img, 1, np.pi / 90, 180, np.array([]), 15, kernel_size)
+        lines = cv2.HoughLinesP(img, rho, np.pi / 180, threshold, np.array([]), 50, max_line_gap)
+
 
         if lines is not None:
             lines, thetas = self._select_vertical_lines(lines)
