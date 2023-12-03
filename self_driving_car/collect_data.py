@@ -1,23 +1,22 @@
 import cv2
 import numpy as np
 from mss import mss
-from time import time
 import torch
-
 from helpers import plot_one_box, roi
 from joystick import PyvJoyXboxController
 
 from lane_detection import LaneDetection
 
+MAX_FPS = 15
+MIN_FRAME_TIME = 1 / MAX_FPS
+count = 0
 
 # Macros
-line_detection_enabled = False
-object_detection_enabled = True
+line_detection_enabled = True
+object_detection_enabled = False
 lane_detection = LaneDetection()
 
-
 assert line_detection_enabled != object_detection_enabled
-
 
 obstacles_labels = ['person', 'bicycle', 'car', 'motorcycle', 'bus', 'truck']
 
@@ -82,25 +81,32 @@ def object_detection(model, image):
 
 
 def lane_direction(lines, thetas):
-    if lines is not None:
-        if lines[0] is None:
-            print('Deve ir para a esquerda')
-            joy.set_axis('LS_X', -0.5)
-        else:
-            print('Deve ir para a direita')
-            joy.set_axis('LS_X', 0.5)
-    else:
-        print('Vai reto')
+    if lines is None :
+        print('Vai reto1')
         joy.set_axis('LS_X', 0)
+    elif lines[1] is not None:
+        print(f'Vai reto2')
+        joy.set_axis('LS_X', 0)
+    else:
+        if lines[0][0][0] < 300:
+            print('Deve ir para a direita')
+            joy.set_axis('LS_X', 0.35)
+        else:
+            print('Deve ir para a esquerda')
+            joy.set_axis('LS_X', -0.35)
+        print(thetas)
+    print('\n')
 
 
 if __name__ == '__main__':
     monitor = {'left': 0, 'top': 40, 'width': 800, 'height': 600}
 
-    scale = 1/2
+    scale = 1 / 2
 
-    vertices_obj_det = np.array(
-        [[300, 600], [300, 0], [500, 0], [500, 600]], np.int32)
+    '''vertices_obj_det = np.array(
+        [[300, 600], [300, 0], [500, 0], [500, 600]], np.int32)'''  # Usado para fazer a calibração dos parâmetros do lane detection, não é para ser rodado junto com o jogo
+    vertices_obj_det = np.array([[0, 600], [0, 500], [266, 375], [
+        532, 250], [1000, 500], [1000, 600]], np.int32)
     vertices_obj_det = (vertices_obj_det * scale).astype(np.int32)
 
     if object_detection_enabled:
@@ -108,21 +114,27 @@ if __name__ == '__main__':
 
     with mss() as sct:
         while True:
-            t0 = time()
+            #print(count)
 
+            # screen capture
             image = np.array(sct.grab(monitor))
+            min_threshold = 111
+            max_threshold = 71
+            max_lane_gap = 50
+            threshold = 180
+            rho = 1
 
             if object_detection_enabled:
                 image = cv2.resize(image, (0, 0), fx=scale, fy=scale)
                 image = object_detection(model, image)
-            
+
             if line_detection_enabled:
-                image, lines, thetas = lane_detection.get_lanes(image)
-                lane_direction(lines, thetas)
-
-            t1 = time()
-
-            # print(f'time: {t1 - t0}')
+                count += 1
+                image, lines, thetas = lane_detection.get_lanes(image, min_threshold, max_threshold, max_lane_gap,
+                                                                threshold, rho)
+                if count == 30:
+                    lane_direction(lines, thetas)
+                    count = 0
 
             cv2.imshow('OpenCV output', image)
 
